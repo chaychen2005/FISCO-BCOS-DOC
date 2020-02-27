@@ -6,8 +6,7 @@ FISCO BCOS的交易结构在原以太坊的交易结构的基础上，有所增�
 
 | name           | type            | description                                                  | RLP index RC1 | RLP index RC2 |
 | :------------- | :-------------- | :----------------------------------------------------------- | ------------- | ------------- |
-| type           | enum            | 交易类型，表明该交易是创建合约还是调用合约交易，初始为空合约 | -             | -             |
-| nonce          | u256            | 消息发送方提供的随机数，用于唯一标识交易                     | 0             | 0             |
+| randomid       | u256            | 消息发送方提供的随机数，用于唯一标识交易                     | 0             | 0             |
 | value          | u256            | 转账数额，目前去币化的FISCO BCOS不使用该字段                 | 5             | 5             |
 | receiveAddress | h160            | 交易接收方地址，type为创建合约时该地址为0x0                  | 4             | 4             |
 | gasPrice       | u256            | 本次交易的gas的单价，FISCO BCOS中为固定值300000000           | 1             | 1             |
@@ -16,12 +15,8 @@ FISCO BCOS的交易结构在原以太坊的交易结构的基础上，有所增�
 | chainId        | u256            | 记录本次交易所属的链信息/业务信息                            | -             | 7             |
 | groupId        | u256            | 记录本次交易所属的群组                                       | -             | 8             |
 | extraData      | vector< byte >  | 预留字段，记录交易信息，内部使用“#”分割信息                | -             | 9             |
-| vrs            | SignatureStruct | 交易发送方对交易7字段RLP编码后的哈希值签名生成的数据         | 7,8,9         | 10,11,12      |
-| hashWith       | h256            | 交易结构所有字段（含签名信息）RLP编码后的哈希值              | -             | -             |
-| sender         | h160            | 交易发送方地址，基于vrs生成                                  | -             | -             |
-| blockLimit     | u256            | 交易生命周期，该交易最晚被处理的块高，FISCO BCOS新增字段     | 3             | 3             |
-| importTime     | u256            | 交易进入交易池的unix时间戳，FISCO BCOS新增字段               | -             | -             |
-| rpcCallback    | function        | 交易出块后RPC回调，FISCO BCOS新增字段                        | -             | -             |
+| vrs            | SignatureStruct | 交易发送方对交易字段RLP编码后的哈希值签名生成的数据         | 7,8,9         | 10,11,12      |
+| blockLimit     | u256            | 交易生命周期，该交易最晚被处理的块高     | 3             | 3             |
 
 RC1的hashWith字段（也称交易hash/交易唯一标识）的生成流程如下：
 
@@ -61,16 +56,15 @@ FISCO BCOS的区块头中每个字段意义如下：
 | stateRoot        | h256          | 状态树的根哈希值                                                     | 1         |
 | transactionsRoot | h256          | 交易树的根哈希值                                                     | 2         |
 | receiptsRoot     | h256          | 收据树的根哈希值                                                     | 3         |
-| dbHash           | h256          | 分布式存储通过计算哈希值来记录一区块中写入的数据，FISCO BCOS新增字段 | 4         |
-| logBloom         | LogBloom      | 交易收据日志组成的Bloom过滤器，FISCO BCOS目前尚未使用                | 5         |
+| dbHash           | h256          | 分布式存储通过计算哈希值来记录一区块中写入的数据 | 4         |
+| logBloom         | LogBloom      | 交易收据日志组成的Bloom过滤器                | 5         |
 | number           | int64_t       | 本区块的块号，块号从0号开始计算                                      | 6         |
 | gasLimit         | u256          | 本区块中所有交易消耗的Gas上限                                        | 7         |
 | gasUsed          | u256          | 本区块中所有交易使用的Gas之和                                        | 8         |
 | timestamp        | int64_t       | 打包区块的unix时间戳                                                 | 9         |
-| extraData        | vector<bytes> | 区块的附加数据，FISCO BCOS目前只用于在第0块中记录群组genesis文件信息 | 10        |
-| sealer           | u256          | 打包区块的节点在共识节点列表中的索引，FISCO BCOS新增字段             | 11        |
-| sealerList       | vector<h512>  | 区块的共识节点列表（不含观察节点），FISCO BCOS新增字段               | 12        |
-| hash             | h256          | 区块头前13个字段RLP编码后的哈希值，FISCO BCOS新增字段                | -         |
+| extraData        | vector<bytes> | 区块的附加数据 | 10        |
+| sealer           | u256          | 打包区块的节点在共识节点列表中的索引           | 11        |
+| sealerList       | vector<h512>  | 区块的共识节点列表（不含观察节点）              | 12        |
 
 ## 交易收据
 
@@ -97,15 +91,33 @@ v2.0.0-rc2扩展了**群组ID和模块ID**范围，**最多支持32767个群组*
 
 ![](../../images/features/network_packet.png)
 
-| name       | type         | description                          |
-| :--------- | :----------- | :----------------------------------- |
-| Length     | uint32_t     | 数据包长度，含包头和数据             |
-| Version    | uint16_t     | 记录数据包版本和特性信息，目前最高位0x8000用于记录数据包是否压缩|
-| groupID (GID)    | int16_t  | 群组ID，范围1-32767   |
-| ModuleID (MID)   | uint16_t | 模块ID，范围1-65535   |
-| PacketType | uint16_t     | 数据包类型，同一模块ID下的子协议标识  |
-| Seq        | uint32_t     | 数据包序列号，每个数据包自增         |
-| Data       | vector<byte> | 数据本身，长度为lenght-12           |
+| name       | description                          |
+| :--------- | :----------------------------------- |
+| Length     | 数据包长度，含包头和数据             |
+| Version    | 记录数据包版本和特性信息，目前最高位0x8000用于记录数据包是否压缩|
+| groupID (GID)    | 群组ID，范围1-32767   |
+| ModuleID (MID)   | 模块ID，范围1-65535   |
+| PacketType | 数据包类型，同一模块ID下的子协议标识  |
+| Seq        | 数据包序列号，每个数据包自增         |
+| Data       | 数据本身，长度为lenght-16           |
+
+| name | description |
+| :--- | :---------- |
+| ParentHash | 该区块父区块的哈希值 |
+| UncleHash | 该区块所有叔块列表的哈希值 |
+| Coinbase | 打包该区块的矿工地址 |
+| Root | 存储所有交易状态的Merkle树根节点哈希 |
+| TxHash | 存储该区块交易的Merkle树根节点哈希 |
+| ReceiptHash | 存储该区块交易收据的Merkle树根节点哈希 |
+| Bloom | 该区块的交易收据日志的Bloom过滤器 |
+| Difficulty | 该区块的难度级别 |
+| Number | 该区块高度 |
+| GasLimit | 该区块的Gas上限 |
+| GasUsed | 该区块消耗的Gas |
+| Time | 该区块开始打包的Unix时间戳 |
+| Extra | 附加的区块数据 |
+| MixDigest | 该哈希值与nonce值组合证明出块执行了足够的计算 |
+| Nonce | 该哈希值与MixDigest值组合证明出块执行了足够的计算 |
 
 v2.0.0-rc2以前的P2PMessage定义请[参考这里](https://fisco-bcos-documentation.readthedocs.io/zh_CN/v2.0.0-rc3/docs/design/protocol_description.html#p2pmessage-v2-0-0-rc1)
 
@@ -161,3 +173,20 @@ AMOP消息包继承ChannelMessage包机构，在data字段添加了自定义内�
 | 100  | 节点不可达 |
 | 101  | SDK不可达  |
 | 102  | 超时       |
+
+| name           | size | description                    |
+| :------------- | :--- | :----------------------------- |
+| magicNo        | 4    | 区块之间分隔符，值为0xD9B4BEF9 |
+| blockSize      | 4    | 区块大小                       |
+| blockHeader    | 80   | 区块头                         |
+| transactionCnt | 可变 | 区块记录的交易数量             |
+| transactions   | 可变 | 区块记录的交易详情             |
+
+| name             | size | description          |
+| :--------------- | :--- | :------------------- |
+| version          | 4    | 版本号               |
+| parentHash       | 32   | 父区块的哈希值       |
+| transactionsRoot | 32   | 交易树的根哈希值     |
+| time             | 4    | 矿工挖矿的unix时间戳 |
+| nBits            | 4    | 区块难度             |
+| nonce            | 4    | 满足区块难度的随机值 |
