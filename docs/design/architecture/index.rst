@@ -24,6 +24,12 @@ FISCO BCOS基于多群组架构实现了强扩展性的群组多账本，基于�
 
 .. image:: ../../../images/architecture/architecture.png
 
+.. image:: ../../../images/architecture/recommend_deployment.png
+.. image:: ../../../images/architecture/simple_depolyment.png
+.. image:: ../../../images/architecture/upload_data.png
+.. image:: ../../../images/architecture/export_data.png
+.. image:: ../../../images/architecture/restore_data.png
+
 
 .. toctree::
    :maxdepth: 1
